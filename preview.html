@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>React + Redux Auth UI Preview</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.2.1/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/8.1.3/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux-toolkit/1.9.7/redux-toolkit.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f5f7fa; color:#1a1a2e; min-height:100vh; }
+    .auth-page { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1rem; }
+    .auth-container { display:flex; width:100%; max-width:900px; min-height:560px; background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08); overflow:hidden; }
+    .auth-branding { flex:1; background:linear-gradient(135deg,#6366f1,#8b5cf6); display:flex; align-items:center; justify-content:center; padding:3rem; }
+    .brand-content { color:#fff; text-align:center; }
+    .brand-content h1 { font-size:2.4rem; font-weight:700; margin-bottom:.75rem; }
+    .brand-content p { font-size:.95rem; opacity:.85; line-height:1.6; }
+    .auth-panel { flex:1; padding:2.5rem 2rem; display:flex; flex-direction:column; }
+    .tab-bar { display:flex; gap:.25rem; background:#f1f3f5; border-radius:10px; padding:4px; margin-bottom:1.5rem; }
+    .tab { flex:1; padding:.55rem; border:none; background:transparent; border-radius:8px; font-size:.9rem; font-weight:600; cursor:pointer; color:#64748b; transition:all .2s; }
+    .tab.active { background:#fff; color:#6366f1; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .auth-form { display:flex; flex-direction:column; gap:1rem; flex:1; }
+    .auth-form h2 { font-size:1.5rem; font-weight:700; }
+    .subtitle { font-size:.88rem; color:#94a3b8; margin-top:-.5rem; }
+    .form-group { display:flex; flex-direction:column; gap:.3rem; }
+    .form-group label { font-size:.82rem; font-weight:600; color:#475569; }
+    .form-group input { padding:.65rem .85rem; border:1.5px solid #e2e8f0; border-radius:8px; font-size:.9rem; transition:border .2s; outline:none; width:100%; }
+    .form-group input:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.12); }
+    .form-group input.input-error { border-color:#ef4444; }
+    .password-wrapper { position:relative; }
+    .password-wrapper input { padding-right:2.8rem; }
+    .toggle-password { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; line-height:1; }
+    .password-strength { display:flex; align-items:center; gap:.5rem; margin-top:.2rem; }
+    .strength-bar { flex:1; height:4px; border-radius:4px; background:#e2e8f0; position:relative; overflow:hidden; }
+    .strength-bar::after { content:''; position:absolute; left:0; top:0; height:100%; border-radius:4px; transition:width .3s; }
+    .strength-weak::after { width:25%; background:#ef4444; }
+    .strength-fair::after { width:50%; background:#f59e0b; }
+    .strength-good::after { width:75%; background:#10b981; }
+    .strength-strong::after { width:100%; background:#059669; }
+    .password-strength span { font-size:.75rem; font-weight:600; }
+    span.strength-weak { color:#ef4444; }
+    span.strength-fair { color:#f59e0b; }
+    span.strength-good { color:#10b981; }
+    span.strength-strong { color:#059669; }
+    .error-banner { background:#fef2f2; color:#dc2626; padding:.6rem .85rem; border-radius:8px; font-size:.85rem; border:1px solid #fecaca; }
+    .field-error { font-size:.78rem; color:#ef4444; }
+    .btn-primary { padding:.7rem; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:.95rem; font-weight:600; cursor:pointer; transition:background .2s; margin-top:.5rem; }
+    .btn-primary:hover { background:#4f46e5; }
+    .switch-text { text-align:center; font-size:.85rem; color:#94a3b8; margin-top:auto; }
+    .link-btn { background:none; border:none; color:#6366f1; font-weight:600; cursor:pointer; font-size:.85rem; }
+    .link-btn:hover { text-decoration:underline; }
+    .dashboard { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1rem; }
+    .dashboard-card { background:#fff; border-radius:16px; padding:3rem; text-align:center; box-shadow:0 4px 24px rgba(0,0,0,.08); max-width:400px; width:100%; }
+    .avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:2rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; }
+    .dashboard-card h2 { margin-bottom:.25rem; }
+    .user-email { color:#94a3b8; font-size:.9rem; }
+    .dashboard-message { margin:1.5rem 0; color:#64748b; }
+    .btn-logout { padding:.6rem 1.8rem; background:#f1f3f5; border:none; border-radius:8px; font-size:.9rem; font-weight:600; color:#475569; cursor:pointer; transition:background .2s; }
+    .btn-logout:hover { background:#e2e8f0; }
+    @media(max-width:700px) { .auth-container { flex-direction:column; max-width:420px; } .auth-branding { padding:2rem; } .brand-content h1 { font-size:1.8rem; } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const { createElement: h, useState } = React;
+    const { useSelector, useDispatch, Provider } = ReactRedux;
+    const { configureStore, createSlice } = window.RTK;
+
+    // ── Redux Slice ──
+    const authSlice = createSlice({
+      name: 'auth',
+      initialState: { user: null, isAuthenticated: false, registeredUsers: [], error: null },
+      reducers: {
+        register(state, action) {
+          const { name, email, password } = action.payload;
+          if (state.registeredUsers.find(u => u.email === email)) {
+            state.error = 'An account with this email already exists.'; return;
+          }
+          state.registeredUsers.push({ name, email, password });
+          state.user = { name, email };
+          state.isAuthenticated = true;
+          state.error = null;
+        },
+        login(state, action) {
+          const { email, password } = action.payload;
+          const found = state.registeredUsers.find(u => u.email === email && u.password === password);
+          if (!found) { state.error = 'Invalid email or password.'; return; }
+          state.user = { name: found.name, email: found.email };
+          state.isAuthenticated = true;
+          state.error = null;
+        },
+        logout(state) { state.user = null; state.isAuthenticated = false; state.error = null; },
+        clearError(state) { state.error = null; }
+      }
+    });
+    const { register, login, logout, clearError } = authSlice.actions;
+    const store = configureStore({ reducer: { auth: authSlice.reducer } });
+
+    // ── Password Strength ──
+    function getStrength(pw) {
+      let s = 0;
+      if (pw.length >= 8) s++;
+      if (/[A-Z]/.test(pw)) s++;
+      if (/[0-9]/.test(pw)) s++;
+      if (/[^A-Za-z0-9]/.test(pw)) s++;
+      if (s <= 1) return { label:'Weak', cls:'strength-weak' };
+      if (s === 2) return { label:'Fair', cls:'strength-fair' };
+      if (s === 3) return { label:'Good', cls:'strength-good' };
+      return { label:'Strong', cls:'strength-strong' };
+    }
+
+    // ── Login Form ──
+    function LoginForm({ onSwitch }) {
+      const dispatch = useDispatch();
+      const error = useSelector(s => s.auth.error);
+      const [fd, setFd] = useState({ email:'', password:'' });
+      const [show, setShow] = useState(false);
+      const [ve, setVe] = useState({});
+      const chg = e => { setFd(p => ({...p,[e.target.name]:e.target.value})); setVe(p => ({...p,[e.target.name]:''})); if(error) dispatch(clearError()); };
+      const submit = e => {
+        e.preventDefault();
+        const er = {};
+        if (!fd.email.trim()) er.email='Email is required.';
+        else if (!/\S+@\S+\.\S+/.test(fd.email)) er.email='Please enter a valid email.';
+        if (!fd.password) er.password='Password is required.';
+        if (Object.keys(er).length) { setVe(er); return; }
+        dispatch(login(fd));
+      };
+      return h('form', { className:'auth-form', onSubmit:submit, noValidate:true },
+        h('h2', null, 'Welcome Back'),
+        h('p', { className:'subtitle' }, 'Sign in to your account'),
+        error && h('div', { className:'error-banner' }, error),
+        h('div', { className:'form-group' },
+          h('label', null, 'Email'),
+          h('input', { type:'email', name:'email', placeholder:'you@example.com', value:fd.email, onChange:chg, className:ve.email?'input-error':'' }),
+          ve.email && h('span', { className:'field-error' }, ve.email)
+        ),
+        h('div', { className:'form-group' },
+          h('label', null, 'Password'),
+          h('div', { className:'password-wrapper' },
+            h('input', { type:show?'text':'password', name:'password', placeholder:'Enter your password', value:fd.password, onChange:chg, className:ve.password?'input-error':'' }),
+            h('button', { type:'button', className:'toggle-password', onClick:()=>setShow(!show) }, show?'\u{1F648}':'\u{1F441}')
+          ),
+          ve.password && h('span', { className:'field-error' }, ve.password)
+        ),
+        h('button', { type:'submit', className:'btn-primary' }, 'Sign In'),
+        h('p', { className:'switch-text' }, "Don't have an account? ", h('button', { type:'button', className:'link-btn', onClick:onSwitch }, 'Create one'))
+      );
+    }
+
+    // ── Register Form ──
+    function RegisterForm({ onSwitch }) {
+      const dispatch = useDispatch();
+      const error = useSelector(s => s.auth.error);
+      const [fd, setFd] = useState({ name:'', email:'', password:'', confirmPassword:'' });
+      const [show, setShow] = useState(false);
+      const [ve, setVe] = useState({});
+      const chg = e => { setFd(p => ({...p,[e.target.name]:e.target.value})); setVe(p => ({...p,[e.target.name]:''})); if(error) dispatch(clearError()); };
+      const submit = e => {
+        e.preventDefault();
+        const er = {};
+        if (!fd.name.trim()) er.name='Name is required.';
+        if (!fd.email.trim()) er.email='Email is required.';
+        else if (!/\S+@\S+\.\S+/.test(fd.email)) er.email='Please enter a valid email.';
+        if (!fd.password) er.password='Password is required.';
+        else if (fd.password.length < 8) er.password='Password must be at least 8 characters.';
+        if (fd.password !== fd.confirmPassword) er.confirmPassword='Passwords do not match.';
+        if (Object.keys(er).length) { setVe(er); return; }
+        dispatch(register({ name:fd.name, email:fd.email, password:fd.password }));
+      };
+      const str = fd.password ? getStrength(fd.password) : null;
+      return h('form', { className:'auth-form', onSubmit:submit, noValidate:true },
+        h('h2', null, 'Create Account'),
+        h('p', { className:'subtitle' }, 'Sign up to get started'),
+        error && h('div', { className:'error-banner' }, error),
+        h('div', { className:'form-group' },
+          h('label', null, 'Full Name'),
+          h('input', { type:'text', name:'name', placeholder:'John Doe', value:fd.name, onChange:chg, className:ve.name?'input-error':'' }),
+          ve.name && h('span', { className:'field-error' }, ve.name)
+        ),
+        h('div', { className:'form-group' },
+          h('label', null, 'Email'),
+          h('input', { type:'email', name:'email', placeholder:'you@example.com', value:fd.email, onChange:chg, className:ve.email?'input-error':'' }),
+          ve.email && h('span', { className:'field-error' }, ve.email)
+        ),
+        h('div', { className:'form-group' },
+          h('label', null, 'Password'),
+          h('div', { className:'password-wrapper' },
+            h('input', { type:show?'text':'password', name:'password', placeholder:'Min. 8 characters', value:fd.password, onChange:chg, className:ve.password?'input-error':'' }),
+            h('button', { type:'button', className:'toggle-password', onClick:()=>setShow(!show) }, show?'\u{1F648}':'\u{1F441}')
+          ),
+          str && h('div', { className:'password-strength' },
+            h('div', { className:'strength-bar '+str.cls }),
+            h('span', { className:str.cls }, str.label)
+          ),
+          ve.password && h('span', { className:'field-error' }, ve.password)
+        ),
+        h('div', { className:'form-group' },
+          h('label', null, 'Confirm Password'),
+          h('input', { type:show?'text':'password', name:'confirmPassword', placeholder:'Re-enter your password', value:fd.confirmPassword, onChange:chg, className:ve.confirmPassword?'input-error':'' }),
+          ve.confirmPassword && h('span', { className:'field-error' }, ve.confirmPassword)
+        ),
+        h('button', { type:'submit', className:'btn-primary' }, 'Create Account'),
+        h('p', { className:'switch-text' }, 'Already have an account? ', h('button', { type:'button', className:'link-btn', onClick:onSwitch }, 'Sign in'))
+      );
+    }
+
+    // ── Dashboard ──
+    function Dashboard() {
+      const dispatch = useDispatch();
+      const user = useSelector(s => s.auth.user);
+      return h('div', { className:'dashboard' },
+        h('div', { className:'dashboard-card' },
+          h('div', { className:'avatar' }, user?.name?.charAt(0).toUpperCase()),
+          h('h2', null, 'Welcome, '+user?.name+'!'),
+          h('p', { className:'user-email' }, user?.email),
+          h('p', { className:'dashboard-message' }, "You're successfully logged in."),
+          h('button', { className:'btn-logout', onClick:()=>dispatch(logout()) }, 'Sign Out')
+        )
+      );
+    }
+
+    // ── Auth Page ──
+    function AuthPage() {
+      const [tab, setTab] = useState('login');
+      const isAuth = useSelector(s => s.auth.isAuthenticated);
+      if (isAuth) return h(Dashboard);
+      return h('div', { className:'auth-page' },
+        h('div', { className:'auth-container' },
+          h('div', { className:'auth-branding' },
+            h('div', { className:'brand-content' },
+              h('h1', null, 'MyApp'),
+              h('p', null, 'A simple React + Redux authentication UI demo with form validation, password strength meter, and state management.')
+            )
+          ),
+          h('div', { className:'auth-panel' },
+            h('div', { className:'tab-bar' },
+              h('button', { className:'tab'+(tab==='login'?' active':''), onClick:()=>setTab('login') }, 'Sign In'),
+              h('button', { className:'tab'+(tab==='register'?' active':''), onClick:()=>setTab('register') }, 'Sign Up')
+            ),
+            tab==='login'
+              ? h(LoginForm, { onSwitch:()=>setTab('register') })
+              : h(RegisterForm, { onSwitch:()=>setTab('login') })
+          )
+        )
+      );
+    }
+
+    // ── Mount ──
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      h(Provider, { store }, h(AuthPage))
+    );
+  </script>
+</body>
+</html>
